@@ -1,0 +1,55 @@
+version: '3.9'
+services:
+  #db-service
+  db:
+    image: postgres:15.1-alpine
+    container_name: nhl_db_container
+    environment:
+      - DB_URL=${DATABASE_URL}
+    ports:
+      - "5433:5432"
+    hostname: db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - nhl-net
+
+  #migration_service
+  migration:
+    image: migrate/migrate
+    container_name: nhl_migration_container
+    volumes:
+      - "./db/migrations:/migrations"
+    environment:
+      - DATABASE_URL
+    env_file:
+      - .env
+    command: ["-path=/migrations", "-database=${DATABASE_URL}", "up"]
+    depends_on:
+      - db
+    #restart: on-failure
+    networks:
+      - nhl-net
+  #backend-web-service
+  app:
+    container_name: nhl_app_container
+    environment:
+      - DB_URL=${DATABASE_URL}
+    tty: true
+    build: .
+    env_file:
+      - .env
+    ports:
+      - 8081:8081
+    restart: on-failure
+    depends_on:
+      - db
+    networks:
+      - nhl-net
+
+volumes:
+  pg_data:
+
+networks:
+  nhl-net:
+    driver: bridge

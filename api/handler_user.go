@@ -9,7 +9,7 @@ import (
 	"time"
 
 	sqlc "github.com/ChileKasoka/nhl-mis/db/sqlc"
-	"github.com/ChileKasoka/nhl-mis/util"
+	"github.com/ChileKasoka/nhl-mis/utils"
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -36,7 +36,7 @@ func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	hashedPassword, err := util.HashedPass(userparams.Password)
+	hashedPassword, err := utils.HashedPass(userparams.Password)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
 		return
@@ -170,7 +170,7 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	// Only update the password if it's not empty
 	if updateReq.Password != "" {
-		hashedPassword, err := util.HashedPass(updateReq.Password)
+		hashedPassword, err := utils.HashedPass(updateReq.Password)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
 			return

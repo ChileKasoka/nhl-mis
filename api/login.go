@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 
-	"github.com/ChileKasoka/nhl-mis/util"
+	"github.com/ChileKasoka/nhl-mis/utils"
 )
 
 func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,7 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user exists and the password is correct
-	err = util.ComparePass(loginRequest.Password, user.Password)
+	err = utils.ComparePass(loginRequest.Password, user.Password)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "invalid credentials")
 		return

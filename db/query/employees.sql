@@ -32,3 +32,21 @@ SET first_name = $2,
     salary = $8
 WHERE employee_id = $1
 RETURNING *;
+
+-- name: GetUserEmployeeInfoByID :many
+SELECT
+    users.id AS user_id,
+    users.first_name,
+    users.last_name,
+    users.email,
+    employees.employee_id,
+    employees.phone_number,
+    employees.hire_date,
+    employees.position,
+    employees.salary
+FROM
+    users
+INNER JOIN
+    employees ON users.id = employees.user_id
+WHERE
+    users.id = $1;

@@ -19,7 +19,7 @@ services:
     image: migrate/migrate
     container_name: nhl_migration_container
     volumes:
-      - "./db/migrations:/migrations"
+      - "./db/migration:/migrations"
     environment:
       - DATABASE_URL
     env_file:

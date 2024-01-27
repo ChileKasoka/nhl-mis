@@ -89,6 +89,70 @@ func (q *Queries) GetEmployee(ctx context.Context, employeeID uuid.UUID) (Employ
 	return i, err
 }
 
+const getUserEmployeeInfoByID = `-- name: GetUserEmployeeInfoByID :many
+SELECT
+    users.id AS user_id,
+    users.first_name,
+    users.last_name,
+    users.email,
+    employees.employee_id,
+    employees.phone_number,
+    employees.hire_date,
+    employees.position,
+    employees.salary
+FROM
+    users
+INNER JOIN
+    employees ON users.id = employees.user_id
+WHERE
+    users.id = $1
+`
+
+type GetUserEmployeeInfoByIDRow struct {
+	UserID      uuid.UUID      `json:"user_id"`
+	FirstName   string         `json:"first_name"`
+	LastName    string         `json:"last_name"`
+	Email       string         `json:"email"`
+	EmployeeID  uuid.UUID      `json:"employee_id"`
+	PhoneNumber sql.NullString `json:"phone_number"`
+	HireDate    sql.NullTime   `json:"hire_date"`
+	Position    sql.NullString `json:"position"`
+	Salary      sql.NullString `json:"salary"`
+}
+
+func (q *Queries) GetUserEmployeeInfoByID(ctx context.Context, id uuid.UUID) ([]GetUserEmployeeInfoByIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserEmployeeInfoByID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserEmployeeInfoByIDRow{}
+	for rows.Next() {
+		var i GetUserEmployeeInfoByIDRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Email,
+			&i.EmployeeID,
+			&i.PhoneNumber,
+			&i.HireDate,
+			&i.Position,
+			&i.Salary,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEmployees = `-- name: ListEmployees :many
 SELECT employee_id, first_name, last_name, email, phone_number, hire_date, position, salary, user_id FROM employees
 ORDER BY employee_id

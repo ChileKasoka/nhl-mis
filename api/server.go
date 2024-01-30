@@ -10,19 +10,19 @@ import (
 )
 
 type Server struct {
-	store *db.Store
+	store  *db.Store
 	router *chi.Mux
 }
 
-func MiddlewareLogger (next http.Handler) http.Handler {
+func MiddlewareLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Received request: %s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
 	})
-	return next.ServeHTTP(w, r)
 }
 
-func NewServer (store *db.Store) *Server(
-	server := &Server(store: store)
+func NewServer(store *db.Store) *Server {
+	server := &Server{store: store}
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -49,12 +49,12 @@ func NewServer (store *db.Store) *Server(
 
 	server.router = router
 	return server
-)
+}
 
 func (server *Server) Start(address string) error {
 	srv := &http.Server{
-		Addr: address,
-		Handler: server.router
+		Addr:    address,
+		Handler: server.router,
 	}
 
 	return srv.ListenAndServe()

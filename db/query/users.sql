@@ -1,8 +1,8 @@
 -- name: CreateUser :one
 INSERT INTO users (
-  first_name, last_name, email, hash_password
+  id, first_name, last_name, email, hash_password, created_at, updated_at
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING *;
 
@@ -10,6 +10,11 @@ RETURNING *;
 SELECT * FROM users
 WHERE id = $1
 LIMIT 1;
+
+-- name: GetUserByEmail :one
+SELECT id, first_name, last_name, email, hash_password
+FROM users
+WHERE email = $1;
 
 -- name: DeleteUser :exec
 DELETE FROM users

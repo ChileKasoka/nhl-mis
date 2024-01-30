@@ -20,12 +20,13 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	type LoginRequest struct {
 		Email    string `json:"email"`
-		Password string `json:"password"`
+		HashPassword string `json:"hash_password"`
 	}
 
 	type LoginResponse struct {
 		ID           string `json:"id"`
-		Name         string `json:"name"`
+		FirstName    string `json:"last_name"`
+		LastName	 string `json:"last_name"`
 		Email        string `json:"email"`
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
@@ -47,7 +48,7 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the user exists and the password is correct
-	err = utils.ComparePass(loginRequest.Password, user.Password)
+	err = utils.ComparePass(loginRequest.HashPassword, user.HashPassword)
 	if err != nil {
 		RespondWithError(w, http.StatusUnauthorized, "invalid credentials")
 		return
@@ -93,7 +94,8 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a response object
 	res := LoginResponse{
 		ID:           user.ID.String(),
-		Name:         user.Name,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
 		Email:        user.Email,
 		AccessToken:  signedAccessToken,
 		RefreshToken: signedRefreshToken,

@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -11,21 +10,22 @@ import (
 
 func ConnectDb() (*sql.DB, error) {
 	dbUrl := os.Getenv("DATABASE_URL")
-
+	
 	if dbUrl == "" {
-		log.Fatal("db url not set")
+		return nil, fmt.Errorf("DB url not set")
 	}
-
+ 
 	db, err := sql.Open("postgres", dbUrl)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
-	//defer db.Close()
-	err = db.Ping()
 
+	err = db.Ping()
 	if err != nil {
-		panic(err)
+		db.Close() // Close the database connection before returning error
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
 	fmt.Println("Established a successful connection!")
 	return db, nil
 }

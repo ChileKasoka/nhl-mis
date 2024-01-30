@@ -6,6 +6,11 @@ services:
     container_name: nhl_db_container
     environment:
       - DB_URL=${DATABASE_URL}
+      # - POSTGRES_USER=${DB_USER}
+      # - POSTGRES_PASSWORD=${DB_PASSWORD}
+      # - POSTGRES_DB=${DB_NAME}
+      # - DATABASE_HOST=${DB_HOST}
+      # - DATABASE_PORT=${DB_PORT}
     ports:
       - "5433:5432"
     hostname: db
@@ -35,12 +40,17 @@ services:
     container_name: nhl_app_container
     environment:
       - DB_URL=${DATABASE_URL}
+      # - POSTGRES_USER=${DB_USER}
+      # - POSTGRES_PASSWORD=${DB_PASSWORD}
+      # - POSTGRES_DB=${DB_NAME}
+      # - DATABASE_HOST=${DB_HOST}
+      # - DATABASE_PORT=${DB_PORT}
     tty: true
     build: .
     env_file:
       - .env
     ports:
-      - 8081:8081
+      - 8080:8080
     restart: on-failure
     depends_on:
       - db

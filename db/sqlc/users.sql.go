@@ -7,32 +7,39 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
-  first_name, last_name, email, hash_password
+  id, first_name, last_name, email, hash_password, created_at, updated_at
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5, $6, $7
 )
 RETURNING id, first_name, last_name, email, hash_password, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	FirstName    string `json:"first_name"`
-	LastName     string `json:"last_name"`
-	Email        string `json:"email"`
-	HashPassword string `json:"hash_password"`
+	ID           uuid.UUID `json:"id"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+	Email        string    `json:"email"`
+	HashPassword string    `json:"hash_password"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
+		arg.ID,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
 		arg.HashPassword,
+		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i User
 	err := row.Scan(
@@ -74,6 +81,33 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.HashPassword,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, first_name, last_name, email, hash_password
+FROM users
+WHERE email = $1
+`
+
+type GetUserByEmailRow struct {
+	ID           uuid.UUID `json:"id"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+	Email        string    `json:"email"`
+	HashPassword string    `json:"hash_password"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i GetUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Email,
+		&i.HashPassword,
 	)
 	return i, err
 }

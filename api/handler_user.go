@@ -17,15 +17,17 @@ import (
 
 type UserResponse struct {
 	ID    string `json:"id"`
-	Name  string `json:"name"`
+	FirstName  string `json:"first_name"`
+	LastName  string `json:"last_name"`
 	Email string `json:"email"`
 }
 
 func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	type Users struct {
-		Name     string `json:"name"`
+		FirstName     string `json:"first_name"`
+		LastName     string `json:"last_name"`
 		Email    string `json:"email"`
-		Password string `json:"password"`
+		HashPassword string `json:"password"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -36,7 +38,7 @@ func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	hashedPassword, err := utils.HashedPass(userparams.Password)
+	hashedPassword, err := utils.HashPass(userparams.HashPassword)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
 		return
@@ -45,9 +47,10 @@ func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	//uuidValue := uuid.New()
 	user, err := server.store.CreateUser(r.Context(), sqlc.CreateUserParams{
 		ID:        uuid.New(),
-		Name:      userparams.Name,
+		FirstName: userparams.FirstName,
+		LastName:  userparams.LastName,
 		Email:     userparams.Email,
-		Password:  hashedPassword,
+		HashPassword:  hashedPassword,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
@@ -55,7 +58,8 @@ func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	res := UserResponse{
 		ID:    user.ID.String(),
 		Email: user.Email,
-		Name:  user.Name,
+		FirstName:  user.FirstName,
+		LastName:  user.LastName,
 	}
 
 	if err != nil {
@@ -78,7 +82,7 @@ func (server *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the getUser function to retrieve the user from the database
-	user, err := server.store.GetUser(r.Context(), sqlc.GetUserParams{ID: userID})
+	user, err := server.store.GetUser(r.Context(), userID)
 	if err != nil {
 		RespondWithError(w, http.StatusInternalServerError, "failed to retrieve user")
 		return
@@ -87,7 +91,8 @@ func (server *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a response object
 	res := UserResponse{
 		ID:    user.ID.String(),
-		Name:  user.Name,
+		FirstName:  user.FirstName,
+		LastName:  user.LastName,
 		Email: user.Email,
 	}
 
@@ -138,7 +143,7 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get the user from the database using the id
-	user, err := server.store.GetUser(r.Context(), sqlc.GetUserParams{ID: userID})
+	user, err := server.store.GetUser(r.Context(), userID)
 	if err != nil {
 		// Handle the error, e.g., log it, return an error response, etc.
 		log.Printf("Error getting user: %v", err)
@@ -148,9 +153,10 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	// Implement logic to update the user fields like name and email
 
 	type UpdateUserReq struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password,omitempty"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		HashPassword  string `json:"password,omitempty"`
 	}
 
 	var updateReq UpdateUserReq
@@ -161,29 +167,33 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Update the user fields only if they are not empty
-	if updateReq.Name != "" {
-		user.Name = updateReq.Name
+	if updateReq.FirstName != "" {
+		user.FirstName = updateReq.FirstName
+	}
+	if updateReq.LastName != "" {
+		user.LastName = updateReq.LastName
 	}
 	if updateReq.Email != "" {
 		user.Email = updateReq.Email
 	}
 
 	// Only update the password if it's not empty
-	if updateReq.Password != "" {
-		hashedPassword, err := utils.HashedPass(updateReq.Password)
+	if updateReq.HashPassword != "" {
+		hashedPassword, err := utils.HashPass(updateReq.HashPassword)
 		if err != nil {
 			RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
 			return
 		}
-		user.Password = hashedPassword
+		user.HashPassword = hashedPassword
 	}
 
 	// Create the UpdateUserParams with the updated values
 	updateParams := sqlc.UpdateUserParams{
 		ID:       user.ID,
-		Name:     user.Name,
+		FirstName:     user.FirstName,
+		LastName:     user.LastName,
 		Email:    user.Email,
-		Password: user.Password,
+		HashPassword: user.HashPassword,
 	}
 
 	if err != nil {
